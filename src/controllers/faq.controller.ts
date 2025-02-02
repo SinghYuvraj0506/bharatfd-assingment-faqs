@@ -8,3 +8,5 @@ export const getAllFaqs = asyncHandler(async (req: Request, res: Response) => {
 
   res.json(new ApiResponse(200, faqs, "FAQS fetched Successfully"));
 });
+
+
