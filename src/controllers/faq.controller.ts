@@ -6,6 +6,8 @@ import z from "zod";
 import { createFAQSchema, getFAQSchema } from "../schemas/faq.schema";
 import { TRANSLATION_LANGUAGES } from "@prisma/client";
 import { translateText } from "../utils/translate";
+import redisClient from "../config/redis.config";
+import log from "../utils/logger";
 
 export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
   const {
@@ -13,27 +15,35 @@ export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
   }: z.infer<typeof getFAQSchema> = req;
   let faqs: any;
 
-  if (!lang || lang === "en") {
-    faqs = await prisma.fAQ.findMany({
-      select: {
-        question: true,
-        answer: true,
-      },
-    });
-  }
-  
-  else{
-    faqs = await prisma.fAQTranslation.findMany({
-      where:{
-        language: lang as any
-      },
-      select: {
-        question: true,
-        answer: true,
-      },
-    });
-  }
+  const cacheKey = "faq:" + (lang ?? "en");
+  const cachedData = await redisClient.get(cacheKey);
 
+  if (cachedData) {
+    faqs = JSON.parse(cachedData);
+    log.info("Cache data hit");
+  } else {
+    if (!lang || lang === "en") {
+      faqs = await prisma.fAQ.findMany({
+        select: {
+          question: true,
+          answer: true,
+        },
+      });
+    } else {
+      faqs = await prisma.fAQTranslation.findMany({
+        where: {
+          language: lang as any,
+        },
+        select: {
+          question: true,
+          answer: true,
+        },
+      });
+    }
+
+    await redisClient.set(cacheKey, JSON.stringify(faqs), "EX", 300);
+    log.info("Cache miss");
+  }
 
   res.json(new ApiResponse(200, faqs, "FAQS Fetched Successfully"));
 });
