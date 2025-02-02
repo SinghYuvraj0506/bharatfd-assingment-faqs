@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,36 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model FAQ {
-  id        String   @id @default(uuid())
-  question  String
-  answer    String
-  language  TRANSATION_LANGUAGES   @default(en)
 
+model FAQ {
+  id          String          @id @default(uuid())
+  question    String
+  answer      String
   translations FAQTranslation[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }
 
 
 model FAQTranslation {
-  id        String   @id @default(uuid())
+  language    TRANSLATION_LANGUAGES
+  question    String
+  answer      String
 
-  language  TRANSATION_LANGUAGES
-  question  String
-  answer    String
-  
-  faqId     String
-  faq       FAQ      @relation(fields: [faqId], references: [id], onDelete: Cascade)
+  faqId       String
+  faq         FAQ              @relation(fields: [faqId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@id([faqId, language])
 }
 
 
-enum TRANSATION_LANGUAGES {
-  en
+enum TRANSLATION_LANGUAGES {
+  // 'en' is default
   hi
   bn
 }

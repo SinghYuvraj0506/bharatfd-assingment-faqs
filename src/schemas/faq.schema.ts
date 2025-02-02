@@ -1,12 +1,13 @@
-import { TRANSATION_LANGUAGES } from "@prisma/client";
+import { TRANSLATION_LANGUAGES } from "@prisma/client";
 import z from "zod";
 
 export const getFAQSchema = z.object({
   query: z.object({
-    lang: z.nativeEnum(TRANSATION_LANGUAGES).optional(),
+    lang: z
+      .nativeEnum(TRANSLATION_LANGUAGES)
+      .or(z.enum(["en"]).optional()),
   }),
 });
-
 
 export const createFAQSchema = z.object({
   body: z.object({
@@ -18,11 +19,9 @@ export const createFAQSchema = z.object({
       .string()
       .min(1, { message: "Answer is required" })
       .max(5000, { message: "Answer is too long" }),
-    language: z.nativeEnum(TRANSATION_LANGUAGES).optional(),
+    language: z.nativeEnum(TRANSLATION_LANGUAGES).or(z.enum(["en"]).optional()),
   }),
 });
-
-
 
 export const updateFAQSchema = z.object({
   body: z.object({
@@ -36,6 +35,6 @@ export const updateFAQSchema = z.object({
       .min(1, { message: "Answer is required" })
       .max(5000, { message: "Answer is too long" })
       .optional(),
-    language: z.nativeEnum(TRANSATION_LANGUAGES).optional(),
+    language: z.nativeEnum(TRANSLATION_LANGUAGES).or(z.enum(["en"]).optional()),
   }),
 });
