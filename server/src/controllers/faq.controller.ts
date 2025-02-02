@@ -48,6 +48,7 @@ export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
   res.json(new ApiResponse(200, faqs, "FAQS Fetched Successfully"));
 });
 
+
 export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
   const {
     body: { question, answer },
