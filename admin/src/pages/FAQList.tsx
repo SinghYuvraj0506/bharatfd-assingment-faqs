@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { FAQ, FAQTranslation } from "@/lib/types";
+import { axiosServices } from "../lib/utils";
 
 const FaqList = () => {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -13,7 +13,7 @@ const FaqList = () => {
     const fetchFaqs = async () => {
       setLoading(true);
       try {
-        const res = await axios.get<{ data: FAQ[] }>("/api/faq", {
+        const res = await axiosServices.get<{ data: FAQ[] }>("/api/v1/faq", {
           params: { lang: languageFilter },
         });
         setFaqs(res.data.data);
@@ -28,7 +28,7 @@ const FaqList = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`/api/faq/${id}`);
+      await axiosServices.delete(`/api/v1/faq/${id}`);
       setFaqs(faqs.filter((faq) => faq.id !== id));
     } catch (err) {
       console.error("Error deleting FAQ", err);
@@ -37,7 +37,7 @@ const FaqList = () => {
 
   const handleViewVariants = async (faqId: string) => {
     try {
-      const res = await axios.get(`/api/faq/${faqId}`);
+      const res = await axiosServices.get(`/api/v1/faq/${faqId}`);
       setFaqVariants(res.data.data || []);
       setViewFaqId(faqId);
     } catch (err) {
@@ -79,7 +79,7 @@ const FaqList = () => {
           <div className="text-center text-gray-500">Loading...</div>
         ) : (
           <ul className="space-y-4">
-            {faqs.map((faq) => (
+            {faqs?.map((faq) => (
               <li
                 key={faq.id}
                 className="bg-gray-50 p-4 rounded-lg shadow-md flex justify-between items-start"
@@ -123,7 +123,7 @@ const FaqList = () => {
 
             {/* Loop through the FAQ variants */}
             <div className="space-y-6">
-              {faqVariants.map((variant) => (
+              {faqVariants?.map((variant) => (
                 <div key={variant.language} className="space-y-2">
                   <h4 className="text-xl font-semibold text-gray-800">
                     {variant.language}

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import axios from "axios";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { axiosServices } from "../lib/utils";
 
 const FAQCreate = () => {
   const [question, setQuestion] = useState("");
@@ -18,7 +18,7 @@ const FAQCreate = () => {
     };
 
     try {
-      await axios.post("/api/faq", faqData);
+      await axiosServices.post("/api/v1/faq", faqData);
       alert("FAQ created successfully!");
     } catch (err) {
       console.error("Error creating FAQ", err);

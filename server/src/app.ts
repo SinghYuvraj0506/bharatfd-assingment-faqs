@@ -6,7 +6,7 @@ import ErrorMiddleware from "./middlewares/error.middleware";
 const app = express();
 
 const corsOption: CorsOptions = {
-  origin: [process.env.CLIENT_URL as string],
+  origin: [process.env.ADMIN_URL as string],
   credentials: true,
 };
 
