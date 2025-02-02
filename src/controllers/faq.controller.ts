@@ -3,9 +3,40 @@ import prisma from "../config/db.config";
 import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
 import z from "zod";
-import { createFAQSchema } from "../schemas/faq.schema";
+import { createFAQSchema, getFAQSchema } from "../schemas/faq.schema";
 import { TRANSLATION_LANGUAGES } from "@prisma/client";
 import { translateText } from "../utils/translate";
+
+export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
+  const {
+    query: { lang },
+  }: z.infer<typeof getFAQSchema> = req;
+  let faqs: any;
+
+  if (!lang || lang === "en") {
+    faqs = await prisma.fAQ.findMany({
+      select: {
+        question: true,
+        answer: true,
+      },
+    });
+  }
+  
+  else{
+    faqs = await prisma.fAQTranslation.findMany({
+      where:{
+        language: lang as any
+      },
+      select: {
+        question: true,
+        answer: true,
+      },
+    });
+  }
+
+
+  res.json(new ApiResponse(200, faqs, "FAQS Fetched Successfully"));
+});
 
 export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
   const {
@@ -41,4 +72,3 @@ export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
 
   res.json(new ApiResponse(200, faq, "FAQS Created Successfully"));
 });
-
