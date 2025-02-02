@@ -13,8 +13,8 @@ export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
   const {
     query: { lang },
   }: z.infer<typeof getFAQSchema> = req;
-  let faqs: any;
 
+  let faqs: any = [];
   const cacheKey = "faq:" + (lang ?? "en");
   const cachedData = await redisClient.get(cacheKey);
 
@@ -27,18 +27,26 @@ export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
         select: {
           question: true,
           answer: true,
+          id: true,
         },
       });
     } else {
-      faqs = await prisma.fAQTranslation.findMany({
+      const translations = await prisma.fAQTranslation.findMany({
         where: {
-          language: lang as any,
+          language: TRANSLATION_LANGUAGES[lang],
         },
         select: {
           question: true,
           answer: true,
+          faqId: true,
         },
       });
+
+      faqs = translations.map((translation: any) => ({
+        id: translation.faqId,
+        question: translation.question,
+        answer: translation.answer,
+      }));
     }
 
     await redisClient.set(cacheKey, JSON.stringify(faqs), "EX", 300);
@@ -48,6 +56,35 @@ export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
   res.json(new ApiResponse(200, faqs, "FAQS Fetched Successfully"));
 });
 
+export const getFaqsById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const faq = await prisma.fAQ.findUnique({
+    where: { id },
+    select: {
+      translations: {
+        select: {
+          language: true,
+          question: true,
+          answer: true,
+        },
+      },
+      question: true,
+      answer: true,
+    },
+  });
+
+  res.json(
+    new ApiResponse(
+      200,
+      [
+        ...(faq?.translations ?? []),
+        { answer: faq?.answer, question: faq?.question, language: "en" },
+      ],
+      "FAQ Fetched Successfully"
+    )
+  );
+});
 
 export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
   const {
@@ -81,5 +118,36 @@ export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
     },
   });
 
+  // delete all faqs cached data
+  const keys = await redisClient.keys("faq:*");
+  for (const key of keys) {
+    await redisClient.del(key);
+  }
+
   res.json(new ApiResponse(200, faq, "FAQS Created Successfully"));
+});
+
+export const deleteFaqs = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  await prisma.$transaction([
+    prisma.fAQTranslation.deleteMany({
+      where: {
+        faqId: id,
+      },
+    }),
+    prisma.fAQ.delete({
+      where: {
+        id: id,
+      },
+    }),
+  ]);
+
+  // delete all faqs cached data
+  const keys = await redisClient.keys("faq:*");
+  for (const key of keys) {
+    await redisClient.del(key);
+  }
+
+  res.json(new ApiResponse(200, {}, "FAQ Deleted Successfully"));
 });
