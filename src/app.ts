@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import cors, { CorsOptions } from "cors";
 import router from "./routes";
+import ErrorMiddleware from "./middlewares/error.middleware";
 
 const app = express();
 
@@ -28,5 +29,8 @@ app.use("/api/v1", router());
 app.all("*", (req: Request, res: Response) => {
   res.send("Route not found");
 });
+
+// handle Error Responses ---
+app.use(ErrorMiddleware as any)
 
 export default app;
