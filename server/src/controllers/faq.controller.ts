@@ -42,7 +42,7 @@ export const getFaqs = asyncHandler(async (req: Request, res: Response) => {
         },
       });
 
-      faqs = translations.map((translation: any) => ({
+      faqs = translations?.map((translation: any) => ({
         id: translation.faqId,
         question: translation.question,
         answer: translation.answer,
@@ -93,7 +93,7 @@ export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
 
   const translationLanguages = Object.keys(TRANSLATION_LANGUAGES);
 
-  const promises = translationLanguages.map(async (e) => {
+  const promises = translationLanguages?.map(async (e) => {
     const questionText = await translateText(question, e);
     const answerText = await translateText(answer, e);
 
@@ -120,8 +120,10 @@ export const createFaqs = asyncHandler(async (req: Request, res: Response) => {
 
   // delete all faqs cached data
   const keys = await redisClient.keys("faq:*");
-  for (const key of keys) {
-    await redisClient.del(key);
+  if(keys && keys.length > 0){
+    for (const key of keys) {
+      await redisClient.del(key);
+    }
   }
 
   res.json(new ApiResponse(200, faq, "FAQS Created Successfully"));
@@ -145,8 +147,10 @@ export const deleteFaqs = asyncHandler(async (req: Request, res: Response) => {
 
   // delete all faqs cached data
   const keys = await redisClient.keys("faq:*");
-  for (const key of keys) {
-    await redisClient.del(key);
+  if(keys && keys.length > 0){
+    for (const key of keys) {
+      await redisClient.del(key);
+    }
   }
 
   res.json(new ApiResponse(200, {}, "FAQ Deleted Successfully"));
